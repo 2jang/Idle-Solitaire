@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>솔리테어 (Klondike Solitaire)</title>
+<title>방치형 솔리테어</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body {
@@ -35,6 +35,41 @@
   }
   .controls button:hover { background: #ffd770; }
   .stat { background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; }
+
+  .auto-play-bar {
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: center;
+  }
+  #auto-btn {
+    padding: 14px 48px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f0c75e 0%, #ff9d3d 100%);
+    color: #2c1810;
+    font-weight: bold;
+    font-size: 1.15rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(240, 199, 94, 0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.5px;
+    animation: autoPulse 2.4s ease-in-out infinite;
+  }
+  #auto-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(240, 199, 94, 0.6);
+  }
+  #auto-btn.playing {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.5);
+    animation: autoPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
 
   .board {
     max-width: 1100px;
@@ -136,6 +171,242 @@
   .win-overlay.show { display: flex; }
   .win-overlay h2 { font-size: 3rem; color: #f0c75e; margin-bottom: 20px; }
 
+  .rules-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .rules-overlay.show { display: flex; }
+  .rules-content {
+    background: linear-gradient(135deg, #1a5d3a 0%, #0f3d24 100%);
+    border: 2px solid #f0c75e;
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    color: white;
+  }
+  .rules-content h2 {
+    font-size: 1.6rem;
+    color: #f0c75e;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .rules-content h3 {
+    color: #ffd770;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+  }
+  .rules-content ul { margin-left: 20px; line-height: 1.7; font-size: 0.92rem; }
+  .rules-content ul li { margin-bottom: 4px; }
+  .rules-content .start-btn {
+    display: block;
+    margin: 24px auto 0;
+    padding: 12px 32px;
+    border: none;
+    border-radius: 8px;
+    background: #f0c75e;
+    color: #2c1810;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .rules-content .start-btn:hover { background: #ffd770; }
+  .rules-content .suit-red { color: #ff6b6b; }
+  .rules-content .suit-black { color: #fff; }
+  #help-btn {
+    width: 32px;
+    padding: 8px 0;
+    font-size: 1rem;
+  }
+
+  .stat.coin { background: rgba(240,199,94,0.25); color: #ffd770; }
+  .stat.star { background: rgba(180,140,255,0.25); color: #d8b4ff; }
+
+  .shop {
+    max-width: 1100px;
+    margin: 30px auto 0;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .shop h2 {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+    color: #f0c75e;
+  }
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .upgrade-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .upgrade-item .item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .upgrade-item .name { font-weight: bold; font-size: 0.95rem; }
+  .upgrade-item .level {
+    font-size: 0.8rem;
+    background: rgba(240,199,94,0.2);
+    color: #f0c75e;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .upgrade-item .desc { font-size: 0.8rem; opacity: 0.8; line-height: 1.4; }
+  .upgrade-item .effect { font-size: 0.85rem; color: #a3e9ff; }
+  .upgrade-item button {
+    margin-top: auto;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: #f0c75e;
+    color: #2c1810;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .upgrade-item button:disabled {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.4);
+    cursor: not-allowed;
+  }
+  .upgrade-item button:not(:disabled):hover { background: #ffd770; }
+  .upgrade-item.maxed { opacity: 0.6; }
+
+  .prestige-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(180,140,255,0.15), rgba(240,199,94,0.1));
+    border: 1px solid rgba(180,140,255,0.3);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .prestige-info { flex: 1; min-width: 200px; }
+  .prestige-info h3 { color: #d8b4ff; margin-bottom: 4px; }
+  .prestige-info p { font-size: 0.85rem; opacity: 0.85; }
+  .prestige-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #b48cff, #f0c75e);
+    color: #2c1810;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .prestige-btn:disabled {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.4);
+    cursor: not-allowed;
+  }
+  .prestige-btn:not(:disabled) {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  @keyframes glow {
+    from { box-shadow: 0 0 4px rgba(216,180,255,0.4); }
+    to { box-shadow: 0 0 16px rgba(216,180,255,0.8); }
+  }
+
+  .confirm-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 250;
+    padding: 20px;
+  }
+  .confirm-overlay.show { display: flex; }
+  .confirm-content {
+    background: linear-gradient(135deg, #2c1c5d 0%, #0f0d24 100%);
+    border: 2px solid #b48cff;
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 460px;
+    width: 100%;
+    color: white;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(180,140,255,0.4);
+  }
+  .confirm-content h2 {
+    color: #d8b4ff;
+    margin-bottom: 14px;
+    font-size: 1.5rem;
+  }
+  .confirm-content p { margin-bottom: 20px; line-height: 1.6; font-size: 0.95rem; }
+  .confirm-buttons { display: flex; gap: 12px; justify-content: center; }
+  .confirm-buttons button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.95rem;
+    flex: 1;
+    max-width: 160px;
+  }
+  .confirm-buttons .cancel-btn {
+    background: rgba(255,255,255,0.15);
+    color: white;
+  }
+  .confirm-buttons .ok-btn {
+    background: linear-gradient(135deg, #b48cff, #f0c75e);
+    color: #2c1810;
+  }
+
+  .toast {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    background: linear-gradient(135deg, #b48cff, #f0c75e);
+    color: #2c1810;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    z-index: 300;
+    transition: transform 400ms cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  footer.credit {
+    max-width: 1100px;
+    margin: 30px auto 10px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+
   @media (max-width: 700px) {
     .card .center { font-size: 1.2rem; }
     .card .rank { font-size: 0.75rem; }
@@ -148,15 +419,21 @@
 <body>
 
 <header>
-  <h1>♠ 솔리테어 ♥</h1>
+  <h1>♠ 방치형 솔리테어 ♥</h1>
   <div class="controls">
+    <span class="stat coin">🪙 <span id="coins">0</span></span>
+    <span class="stat star">★ <span id="stars">0</span></span>
     <span class="stat">이동: <span id="moves">0</span></span>
     <span class="stat">시간: <span id="timer">00:00</span></span>
     <button id="undo-btn">실행취소</button>
-    <button id="auto-btn">▶ 오토 플레이</button>
     <button id="new-btn">새 게임</button>
+    <button id="help-btn" title="게임 규칙">?</button>
   </div>
 </header>
+
+<div class="auto-play-bar">
+  <button id="auto-btn">▶ 오토 플레이</button>
+</div>
 
 <div class="board">
   <div class="top-row">
@@ -176,6 +453,71 @@
     <div class="pile tableau" id="t4"></div>
     <div class="pile tableau" id="t5"></div>
     <div class="pile tableau" id="t6"></div>
+  </div>
+</div>
+
+<div class="shop">
+  <h2>🪙 업그레이드 상점</h2>
+  <div class="shop-grid" id="shop-grid"></div>
+  <div class="prestige-section">
+    <div class="prestige-info">
+      <h3>★ 덱 환생 (프레스티지)</h3>
+      <p id="prestige-desc">코인 1,000개 이상 시 활성화 — 별을 얻고 영구 코인 +5%/별 보너스</p>
+    </div>
+    <button class="prestige-btn" id="prestige-btn" disabled>덱 환생</button>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="prestige-confirm">
+  <div class="confirm-content">
+    <h2>★ 덱 환생</h2>
+    <p id="prestige-confirm-text"></p>
+    <div class="confirm-buttons">
+      <button class="cancel-btn" id="prestige-cancel">취소</button>
+      <button class="ok-btn" id="prestige-ok">환생하기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="credit">made by 22018093 조현우</footer>
+
+<div class="rules-overlay" id="rules-overlay">
+  <div class="rules-content">
+    <h2>♠ 방치형 솔리테어 게임 규칙 <span class="suit-red">♥</span></h2>
+
+    <h3>🎯 게임 목표</h3>
+    <ul>
+      <li>모든 52장의 카드를 우상단의 <b>4개 파운데이션</b>에 무늬별로 A → 2 → ... → K 순서로 쌓으면 승리</li>
+    </ul>
+
+    <h3>🃏 카드 배치</h3>
+    <ul>
+      <li><b>태블로 (아래쪽 7개 줄)</b>: 한 단계 낮은 카드 + <b>반대 색깔</b>만 올릴 수 있음 (예: 빨간 7 위에 검은 6)</li>
+      <li><b>빈 태블로 칸</b>: K만 놓을 수 있음</li>
+      <li><b>파운데이션 (위쪽 4칸)</b>: 같은 무늬, 한 단계 높은 카드만 (A부터 시작)</li>
+    </ul>
+
+    <h3>🖱️ 조작 방법</h3>
+    <ul>
+      <li><b>드래그 앤 드롭</b>으로 카드 이동 (여러 장 연속 시퀀스도 함께 이동)</li>
+      <li><b>더블클릭</b>: 가능하면 파운데이션으로 자동 이동</li>
+      <li><b>좌상단 카드 더미 클릭</b>: 새 카드 뽑기 (모두 뽑으면 다시 클릭하여 재활용)</li>
+      <li><b>실행취소</b> 버튼으로 최대 50수까지 되돌리기</li>
+      <li><b>▶ 오토 플레이</b>: AI가 자동으로 좋은 수를 찾아 진행</li>
+    </ul>
+
+    <h3>🪙 방치형 시스템</h3>
+    <ul>
+      <li>카드를 파운데이션에 올릴 때마다 <b>코인</b> 획득 (랭크 × 배율)</li>
+      <li><b>직접 옮길 때 ×3 보너스</b> — 오토 플레이보다 수동이 더 많이 벌림</li>
+      <li>코인으로 <b>업그레이드</b> 구매 (배율, 속도, 수동 보너스 등)</li>
+      <li><b>덱 환생(프레스티지)</b>: 1,000 코인 이상 시 별 획득 — 영구 +5%/별 보너스</li>
+      <li>모든 진행도는 자동 저장됩니다</li>
+    </ul>
+
+    <button class="start-btn" id="start-btn">게임 시작</button>
   </div>
 </div>
 
@@ -200,6 +542,187 @@ let autoPlaying = false;
 let autoPlayTimeout = null;
 let autoPlayStuck = 0;
 
+// === Idle progression ===
+const SAVE_KEY = 'solitaire-idle-v1';
+const UPGRADES = {
+  multiplier: {
+    name: '코인 배율',
+    desc: '모든 카드 코인 +0.25배',
+    baseCost: 50,
+    costMult: 1.55,
+    maxLevel: 40,
+    effect: lvl => 1 + lvl * 0.25,
+    fmt: v => '×' + v.toFixed(2)
+  },
+  manualBonus: {
+    name: '수동 보너스',
+    desc: '직접 옮긴 카드 보너스 +1배',
+    baseCost: 25,
+    costMult: 1.35,
+    maxLevel: 15,
+    effect: lvl => 3 + lvl,
+    fmt: v => '×' + v
+  },
+  speed: {
+    name: '오토 속도',
+    desc: '오토 플레이 간격 -20ms',
+    baseCost: 15,
+    costMult: 1.3,
+    maxLevel: 10,
+    effect: lvl => Math.max(20, 220 - lvl * 20),
+    fmt: v => v + 'ms'
+  }
+};
+
+let progress = {
+  coins: 0,
+  stars: 0,
+  totalEarned: 0,
+  gamesWon: 0,
+  tutorialSeen: false,
+  upgrades: { multiplier: 0, manualBonus: 0, speed: 0 }
+};
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    progress = Object.assign(progress, data);
+    // ensure all upgrade keys exist
+    for (const k of Object.keys(UPGRADES)) {
+      if (typeof progress.upgrades[k] !== 'number') progress.upgrades[k] = 0;
+    }
+  } catch (e) { console.warn('save load failed', e); }
+}
+
+function saveProgress() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(progress)); }
+  catch (e) { /* ignore */ }
+}
+
+function upgradeCost(key) {
+  const u = UPGRADES[key];
+  const lvl = progress.upgrades[key];
+  return Math.floor(u.baseCost * Math.pow(u.costMult, lvl));
+}
+
+function starBonus() { return 1 + progress.stars * 0.05; }
+function coinMultiplier() { return UPGRADES.multiplier.effect(progress.upgrades.multiplier); }
+function manualBonus() { return UPGRADES.manualBonus.effect(progress.upgrades.manualBonus); }
+function autoSpeed() { return UPGRADES.speed.effect(progress.upgrades.speed); }
+
+function awardCoins(card, isAuto) {
+  const base = rankValue(card.rank) + 1; // A=1 ... K=13
+  const mult = coinMultiplier() * starBonus() * (isAuto ? 1 : manualBonus());
+  const earned = Math.max(1, Math.floor(base * mult));
+  progress.coins += earned;
+  progress.totalEarned += earned;
+  saveProgress();
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('coins').textContent = progress.coins.toLocaleString();
+  document.getElementById('stars').textContent = progress.stars;
+  renderShop();
+}
+
+function buyUpgrade(key) {
+  const u = UPGRADES[key];
+  const lvl = progress.upgrades[key];
+  if (lvl >= u.maxLevel) return;
+  const cost = upgradeCost(key);
+  if (progress.coins < cost) return;
+  progress.coins -= cost;
+  progress.upgrades[key] = lvl + 1;
+  saveProgress();
+  updateStats();
+}
+
+function prestigeStarsGain() {
+  if (progress.coins < 1000) return 0;
+  return Math.floor(Math.sqrt(progress.coins / 100));
+}
+
+function doPrestige() {
+  const gain = prestigeStarsGain();
+  if (gain <= 0) return;
+  document.getElementById('prestige-confirm-text').innerHTML =
+    `★ <b style="color:#d8b4ff">${gain}</b>개의 별을 얻고<br>모든 업그레이드와 코인을 초기화합니다.<br><br>영구 코인 보너스는 <b style="color:#f0c75e">×${(1 + (progress.stars + gain) * 0.05).toFixed(2)}</b>가 됩니다.`;
+  document.getElementById('prestige-confirm').classList.add('show');
+}
+
+function confirmPrestige() {
+  const gain = prestigeStarsGain();
+  document.getElementById('prestige-confirm').classList.remove('show');
+  if (gain <= 0) return;
+  progress.stars += gain;
+  progress.coins = 0;
+  progress.upgrades = { multiplier: 0, manualBonus: 0, speed: 0 };
+  saveProgress();
+  newGame();
+  updateStats();
+  showToast(`★ ${gain} 별 획득! 코인 ×${starBonus().toFixed(2)} 영구 보너스`);
+}
+
+let toastTimer = null;
+function showToast(text) {
+  const el = document.getElementById('toast');
+  el.textContent = text;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function renderShop() {
+  const grid = document.getElementById('shop-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const key of Object.keys(UPGRADES)) {
+    const u = UPGRADES[key];
+    const lvl = progress.upgrades[key];
+    const cost = upgradeCost(key);
+    const maxed = lvl >= u.maxLevel;
+    const cur = u.effect(lvl);
+    const next = maxed ? null : u.effect(lvl + 1);
+
+    const item = document.createElement('div');
+    item.className = 'upgrade-item' + (maxed ? ' maxed' : '');
+    item.innerHTML = `
+      <div class="item-head">
+        <span class="name">${u.name}</span>
+        <span class="level">Lv. ${lvl}${u.maxLevel < 99 ? ' / ' + u.maxLevel : ''}</span>
+      </div>
+      <div class="desc">${u.desc}</div>
+      <div class="effect">현재 ${u.fmt(cur)}${next !== null ? ' → 다음 ' + u.fmt(next) : ' (최대)'}</div>
+      <button data-key="${key}" ${maxed || progress.coins < cost ? 'disabled' : ''}>
+        ${maxed ? '최대 레벨' : '🪙 ' + cost.toLocaleString()}
+      </button>
+    `;
+    grid.appendChild(item);
+  }
+  // Wire buttons
+  grid.querySelectorAll('button[data-key]').forEach(btn => {
+    btn.addEventListener('click', () => buyUpgrade(btn.dataset.key));
+  });
+
+  // Prestige
+  const pBtn = document.getElementById('prestige-btn');
+  const pDesc = document.getElementById('prestige-desc');
+  const gain = prestigeStarsGain();
+  if (gain > 0) {
+    pBtn.disabled = false;
+    pBtn.textContent = `★ ${gain} 획득`;
+    pDesc.textContent = `지금 환생하면 별 ${gain}개 획득. 별당 코인 +5% 영구 보너스 (현재 ×${starBonus().toFixed(2)}).`;
+  } else {
+    pBtn.disabled = true;
+    pBtn.textContent = '덱 환생';
+    const need = Math.max(0, 1000 - progress.coins);
+    pDesc.textContent = `코인 ${need.toLocaleString()}개 더 필요 (1,000코인 이상 시 활성화). 별당 영구 +5% 코인 보너스.`;
+  }
+}
+
 function rankValue(rank) { return RANKS.indexOf(rank); }
 
 function createDeck() {
@@ -216,8 +739,8 @@ function createDeck() {
   return deck;
 }
 
-function newGame() {
-  stopAutoPlay();
+function newGame(keepAutoPlay = false) {
+  if (!keepAutoPlay) stopAutoPlay();
   const deck = createDeck();
   state = {
     tableau: [[],[],[],[],[],[],[]],
@@ -236,10 +759,12 @@ function newGame() {
   state.stock = deck;
   history = [];
   movesCount = 0;
+  winHandled = false;
   document.getElementById('moves').textContent = '0';
   document.getElementById('win-overlay').classList.remove('show');
   startTimer();
   render();
+  updateStats();
 }
 
 function startTimer() {
@@ -262,10 +787,12 @@ function snapshot() {
 function undo() {
   stopAutoPlay();
   if (history.length === 0) return;
+  const oldPositions = captureCardPositions();
   state = JSON.parse(history.pop());
   movesCount = Math.max(0, movesCount - 1);
   document.getElementById('moves').textContent = movesCount;
   render();
+  animateCardMoves(oldPositions);
 }
 
 function recordMove() {
@@ -298,6 +825,40 @@ function buildCardEl(card, index, totalInPile) {
   }
 
   return el;
+}
+
+// FLIP technique: capture all card positions before a state change so we can
+// animate from old → new positions after re-render.
+function captureCardPositions() {
+  const map = new Map();
+  document.querySelectorAll('.card[data-card-id]').forEach(el => {
+    map.set(el.dataset.cardId, el.getBoundingClientRect());
+  });
+  return map;
+}
+
+function animateCardMoves(oldPositions) {
+  if (!oldPositions) return;
+  document.querySelectorAll('.card[data-card-id]').forEach(el => {
+    const id = el.dataset.cardId;
+    const oldRect = oldPositions.get(id);
+    if (!oldRect) return;
+    const newRect = el.getBoundingClientRect();
+    const dx = oldRect.left - newRect.left;
+    const dy = oldRect.top - newRect.top;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+
+    el.style.transition = 'none';
+    el.style.transform = `translate(${dx}px, ${dy}px)`;
+    el.style.zIndex = '60';
+    void el.offsetHeight; // force reflow
+    el.style.transition = 'transform 220ms cubic-bezier(.4,0,.2,1)';
+    el.style.transform = '';
+    setTimeout(() => {
+      el.style.transition = '';
+      el.style.zIndex = '';
+    }, 260);
+  });
 }
 
 function render() {
@@ -437,7 +998,7 @@ function canMoveToFoundation(cards, pileIdx) {
   return rankValue(card.rank) === rankValue(destTop.rank) + 1;
 }
 
-function tryMove(drag, targetType, targetIdx) {
+function tryMove(drag, targetType, targetIdx, isAuto = false) {
   const cards = drag.cards;
   let allowed = false;
   if (targetType === 'tableau') allowed = canMoveToTableau(cards, targetIdx);
@@ -446,6 +1007,13 @@ function tryMove(drag, targetType, targetIdx) {
 
   // Don't allow drop on same pile
   if (drag.pileType === targetType && drag.pileIdx === targetIdx) return;
+
+  const oldPositions = captureCardPositions();
+
+  // Award coins on foundation arrival (not on foundation→foundation, blocked above)
+  if (targetType === 'foundation' && drag.pileType !== 'foundation') {
+    awardCoins(cards[0], isAuto);
+  }
 
   snapshot();
 
@@ -471,6 +1039,7 @@ function tryMove(drag, targetType, targetIdx) {
 
   recordMove();
   render();
+  animateCardMoves(oldPositions);
 }
 
 // === Click on stock to draw ===
@@ -514,13 +1083,24 @@ function onDoubleClick(e) {
   }
 }
 
+let winHandled = false;
 function checkWin() {
   const total = state.foundation.reduce((sum, p) => sum + p.length, 0);
-  if (total === 52) {
-    clearInterval(timerInterval);
-    document.getElementById('win-stats').textContent =
-      `${movesCount}번의 이동, ${document.getElementById('timer').textContent} 소요`;
-    document.getElementById('win-overlay').classList.add('show');
+  if (total === 52 && !winHandled) {
+    winHandled = true;
+    progress.gamesWon++;
+    // Win bonus: 100 × (1 + multiplier level × 0.25) × star bonus
+    const bonus = Math.floor(100 * coinMultiplier() * starBonus());
+    progress.coins += bonus;
+    progress.totalEarned += bonus;
+    saveProgress();
+    updateStats();
+    if (!autoPlaying) {
+      clearInterval(timerInterval);
+      document.getElementById('win-stats').textContent =
+        `${movesCount}번의 이동, ${document.getElementById('timer').textContent} 소요 · 승리 보너스 🪙 ${bonus.toLocaleString()}`;
+      document.getElementById('win-overlay').classList.add('show');
+    }
   }
 }
 
@@ -582,7 +1162,55 @@ function findBestMove() {
   return null;
 }
 
+// When autoplay is truly stuck, locate the next-needed card anywhere and
+// force-place it on its foundation so the deal always completes.
+function findForceMove() {
+  for (const suit of SUITS) {
+    const fIdx = SUIT_TO_FOUNDATION[suit];
+    const f = state.foundation[fIdx];
+    if (f.length >= 13) continue;
+    const targetRank = RANKS[f.length];
+    for (let i = 0; i < 7; i++) {
+      const pile = state.tableau[i];
+      for (let k = 0; k < pile.length; k++) {
+        if (pile[k].suit === suit && pile[k].rank === targetRank)
+          return { from: 'tableau', pileIdx: i, cardIdx: k, card: pile[k], fIdx };
+      }
+    }
+    for (let k = 0; k < state.waste.length; k++) {
+      if (state.waste[k].suit === suit && state.waste[k].rank === targetRank)
+        return { from: 'waste', cardIdx: k, card: state.waste[k], fIdx };
+    }
+    for (let k = 0; k < state.stock.length; k++) {
+      if (state.stock[k].suit === suit && state.stock[k].rank === targetRank)
+        return { from: 'stock', cardIdx: k, card: state.stock[k], fIdx };
+    }
+  }
+  return null;
+}
+
+function executeForceMove(fm) {
+  const oldPositions = captureCardPositions();
+  snapshot();
+  if (fm.from === 'tableau') {
+    state.tableau[fm.pileIdx].splice(fm.cardIdx, 1);
+    const pile = state.tableau[fm.pileIdx];
+    if (pile.length > 0 && !pile[pile.length - 1].faceUp) pile[pile.length - 1].faceUp = true;
+  } else if (fm.from === 'waste') {
+    state.waste.splice(fm.cardIdx, 1);
+  } else if (fm.from === 'stock') {
+    state.stock.splice(fm.cardIdx, 1);
+  }
+  fm.card.faceUp = true;
+  state.foundation[fm.fIdx].push(fm.card);
+  awardCoins(fm.card, true);
+  recordMove();
+  render();
+  animateCardMoves(oldPositions);
+}
+
 function drawFromStock() {
+  const oldPositions = captureCardPositions();
   snapshot();
   if (state.stock.length === 0) {
     while (state.waste.length > 0) {
@@ -597,13 +1225,16 @@ function drawFromStock() {
   }
   recordMove();
   render();
+  animateCardMoves(oldPositions);
 }
 
 function startAutoPlay() {
   if (autoPlaying) { stopAutoPlay(); return; }
   autoPlaying = true;
   autoPlayStuck = 0;
-  document.getElementById('auto-btn').textContent = '⏸ 중지';
+  const btn = document.getElementById('auto-btn');
+  btn.textContent = '⏸ 오토 중지';
+  btn.classList.add('playing');
   autoPlayStep();
 }
 
@@ -611,43 +1242,80 @@ function stopAutoPlay() {
   autoPlaying = false;
   if (autoPlayTimeout) { clearTimeout(autoPlayTimeout); autoPlayTimeout = null; }
   const btn = document.getElementById('auto-btn');
-  if (btn) btn.textContent = '▶ 오토 플레이';
+  if (btn) {
+    btn.textContent = '▶ 오토 플레이';
+    btn.classList.remove('playing');
+  }
 }
 
 function autoPlayStep() {
   if (!autoPlaying) return;
 
-  // Stop if won
+  // Win → always auto-restart (until user manually stops)
   if (state.foundation.reduce((s, p) => s + p.length, 0) === 52) {
-    stopAutoPlay();
+    newGame(true);
+    autoPlayTimeout = setTimeout(autoPlayStep, 500);
     return;
   }
 
   const move = findBestMove();
   if (move) {
     if (move.targetType === 'foundation') autoPlayStuck = 0;
-    tryMove(move, move.targetType, move.targetIdx);
-    autoPlayTimeout = setTimeout(autoPlayStep, 220);
-  } else {
-    const totalStock = state.stock.length + state.waste.length;
-    // If we've cycled through the entire stock+waste without making a foundation
-    // move, no further progress is possible — stop.
-    if (totalStock === 0 || autoPlayStuck >= totalStock + 1) {
-      stopAutoPlay();
-      return;
-    }
+    tryMove(move, move.targetType, move.targetIdx, true);
+    autoPlayTimeout = setTimeout(autoPlayStep, autoSpeed());
+    return;
+  }
+
+  // No legal moves — try drawing from stock
+  const totalStock = state.stock.length + state.waste.length;
+  if (totalStock > 0 && autoPlayStuck < totalStock + 1) {
     drawFromStock();
     autoPlayStuck++;
-    autoPlayTimeout = setTimeout(autoPlayStep, 220);
+    autoPlayTimeout = setTimeout(autoPlayStep, autoSpeed());
+    return;
+  }
+
+  // Truly stuck → force-place the next-needed card so the deal always completes
+  const forced = findForceMove();
+  if (forced) {
+    executeForceMove(forced);
+    autoPlayStuck = 0;
+    autoPlayTimeout = setTimeout(autoPlayStep, autoSpeed());
+    return;
+  }
+
+  // All 52 placed (handled above), but as safety, restart
+  newGame(true);
+  autoPlayTimeout = setTimeout(autoPlayStep, 500);
+}
+
+function showRules() {
+  document.getElementById('rules-overlay').classList.add('show');
+}
+function closeRules() {
+  document.getElementById('rules-overlay').classList.remove('show');
+  if (!progress.tutorialSeen) {
+    progress.tutorialSeen = true;
+    saveProgress();
   }
 }
 
 document.getElementById('undo-btn').addEventListener('click', undo);
-document.getElementById('new-btn').addEventListener('click', newGame);
+document.getElementById('new-btn').addEventListener('click', () => newGame());
 document.getElementById('auto-btn').addEventListener('click', startAutoPlay);
+document.getElementById('prestige-btn').addEventListener('click', doPrestige);
+document.getElementById('prestige-ok').addEventListener('click', confirmPrestige);
+document.getElementById('prestige-cancel').addEventListener('click', () => {
+  document.getElementById('prestige-confirm').classList.remove('show');
+});
+document.getElementById('help-btn').addEventListener('click', showRules);
+document.getElementById('start-btn').addEventListener('click', closeRules);
 
+loadProgress();
 setupDropTargets();
 newGame();
+updateStats();
+if (!progress.tutorialSeen) showRules();
 </script>
 
 </body>
